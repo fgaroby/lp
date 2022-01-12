@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -e
+
+printf '\n\e[42mRUNNING POST-CHECKOUT HOOK\e[0m\n\n'
+
+# this is a file checkout – do nothing
+if [ "$3" = "0" ]; then exit; fi
+
+printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+composer dump-autoload
+php artisan vendor:publish --provider="Tohidplus\Translation\TranslationServiceProvider"
+php artisan VueTranslation:generate
+
+# Clear the cache of the application and force re generate
+php artisan config:clear
+php artisan cache:clear
+php artisan config:cache
+
+# Clear also the PHP route cache and re generate it
+php artisan route:cache
+
+#php artisan migrate:fresh --seed
+# Create symbolic link to transverse (front-end)
+export $(grep -v '^#' .env | grep APP_TRANSVERSE | xargs)
+php artisan transverse:toggle "$(echo "$APP_TRANSVERSE" | sed 's/.*/\u&/')"
+
+printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -

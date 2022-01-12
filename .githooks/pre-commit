@@ -1,0 +1,68 @@
+#!/bin/sh
+
+print_separator() {
+    printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+}
+
+print_title() {
+    printf "\n\e[44m%s\e[0m\n\n" "$1"
+}
+
+check_php() {
+    print_title "FIXING AND CLEANING PHP"
+    print_separator
+    echo "$php_files"
+    composer exec -v -- php-cs-fixer -vvv --config=".php_cs" fix -- $php_files
+    git add $php_files
+}
+
+check_js() {
+    print_separator
+    echo "$js_files"
+    print_title "FIXING AND CLEANING JS"
+    if [ -z "$js_files" ]; then
+        echo "Nothing to do!"
+    else
+        npx eslint --fix $js_files
+        sleep 2
+    fi
+}
+
+check_json() {
+    print_separator
+    echo "$json_files"
+    print_title "CHECKING JSON SYNTHAX"
+    if [ -z "$json_files" ]; then
+        echo "Nothing to do!"
+    else
+        if ! composer exec -v -- jsonlint $json_files;
+        then
+            exit 1
+        fi
+    fi
+}
+
+# variable containing all modified files
+CACHED_FILES=$(git diff --cached --name-status | awk '$1 != "D" { print $NF }')
+
+php_files=$(echo "$CACHED_FILES" | tr " " "\n" | grep .php$ | tr "\n" " ")
+js_files=$(echo "$CACHED_FILES" | tr " " "\n" | grep -E '.vue$|.js$' - | tr "\n" " ")
+json_files=$(echo "$CACHED_FILES" | tr " " "\n" | grep .json$ | tr "\n" " ")
+
+printf '\n\e[42mRUNNING PRE-COMMIT HOOK\e[0m\n\n'
+echo "----> Following files will be checked:"
+echo "$CACHED_FILES"
+
+if [ ! -z "$php_files" ]; then
+    check_php
+fi
+
+if [ ! -z "$js_files" ]; then
+    check_js
+fi
+
+if [ ! -z "$json_files" ]; then
+    check_json
+fi
+
+print_separator

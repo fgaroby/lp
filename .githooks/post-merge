@@ -1,0 +1,8 @@
+#!/bin/sh
+
+printf '\n\e[42mRUNNING POST-MERGE HOOK\e[0m\n\n'
+
+printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
+npm install
+composer install
+printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' -
