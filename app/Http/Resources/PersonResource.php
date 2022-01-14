@@ -15,11 +15,12 @@ class PersonResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'       => $this->id_kwm_lp,
-            'idPerson' => $this->person_id,
-            'type'     => 'info-cine',
-            'title'    => $this->name_person,
-            'content'  => [
+            'id'          => $this->id_kwm_lp,
+            'idPerson'    => $this->person_id,
+            'suppression' => 0, // @todo : comprendre d'où vient cette valeur
+            'type'        => 'info-cine',
+            'title'       => $this->name_person,
+            'content'     => [
                 'nom'            => $this->name_person,
                 'url_dbpedia'    => $this->url_dbpedia,
                 'lieu_naissance' => $this->lieu_naissance,
