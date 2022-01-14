@@ -29,7 +29,7 @@ class PersonResource extends JsonResource
                 'profession'     => $this->profession,
                 'date_naissance' => optional($this->date_naissance)->format('Y'),
                 'photo'          => $this->photo,
-                'movies'         => MovieResource::collection($this->movies->keyBy->movie_id),
+                'movies'         => MovieResource::collection($this->movies->keyBy->movie_id)->person($this->person_id),
             ],
         ];
     }

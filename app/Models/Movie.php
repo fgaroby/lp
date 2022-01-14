@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class Movie extends Model
 {
@@ -37,6 +39,16 @@ class Movie extends Model
         $value = $this->attributes['official_website'];
 
         return isset($value) && !empty($value) ? trim($value) : null;
+    }
+
+    public function fonctions(int $person_id): Collection
+    {
+        return DB::table('movie_person AS mp')
+                 ->join('person_type AS pt', 'mp.person_type_person_type_id', 'pt.person_type_id')
+                 ->select('person_type_person_type_id AS type_id', 'name_person_type AS name')
+                 ->where('movie_movie_id', $this->movie_id)
+                 ->where('person_person_id', $person_id)
+                 ->get();
     }
 
     /**

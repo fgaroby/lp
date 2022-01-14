@@ -13,6 +13,15 @@ class MovieResource extends JsonResource
      */
     public $preserveKeys = true;
 
+    protected int $person_id;
+
+    public function person(int $person_id)
+    {
+        $this->person_id = $person_id;
+
+        return $this;
+    }
+
     /**
      * Transform the resource into an array.
      *
@@ -36,8 +45,17 @@ class MovieResource extends JsonResource
                 'search_engine'    => $this->search_engine,
                 'official_website' => $this->official_website,
                 'pictures'         => PictureResource::collection($this->pictures),
-                //'fonctions'        => FonctionResource::collection($this->fonctions),
+                'fonctions'        => FonctionResource::collection($this->fonctions($this->person_id)),
             ],
         ];
+    }
+
+    public static function collection($resource)
+    {
+        return tap(new MovieCollection($resource, static::class), function ($collection) {
+            if (property_exists(static::class, 'preserveKeys')) {
+                $collection->preserveKeys = (new static([]))->preserveKeys === true;
+            }
+        });
     }
 }
