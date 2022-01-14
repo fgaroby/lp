@@ -21,6 +21,13 @@ class Movie extends Model
     protected $primaryKey = 'movie_id';
 
     /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
      * Return NULL if the value is empty.
      *
      * @return string|null

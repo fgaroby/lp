@@ -63,6 +63,12 @@ class ExportFilmographie extends Command
                 }
             }, 'movie_id');
 
+        Movie::query()
+            ->where('a_mettre_a_jour', true)
+            ->update([
+                'a_mettre_a_jour' => false,
+            ]);
+
         return 0;
     }
 }
