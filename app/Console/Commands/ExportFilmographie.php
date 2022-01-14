@@ -112,7 +112,7 @@ class ExportFilmographie extends Command
     {
         $this->_start();
 
-        $batch = 0; // On peut compter le nombre de lots traités
+        $batch = 0; // le mode DEBUG compte le nombre de lots traités.
 
         return DB::transaction(function () use(&$batch) {
             Movie::query()
