@@ -15,14 +15,14 @@ class PictureResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'title'   => $this->picture_id,
+            'title'   => (string) $this->picture_id,
             'content' => [
                 'name'         => $this->name,
                 'url'          => $this->url,
-                'width'        => $this->width,
-                'height'       => $this->height,
+                'width'        => (string) $this->width,
+                'height'       => (string) $this->height,
                 'mime_type'    => $this->mime_type,
-                'picture_type' => $this->picture_type_picture_type_id,
+                'picture_type' => (string) $this->picture_type_picture_type_id,
             ],
         ];
     }
