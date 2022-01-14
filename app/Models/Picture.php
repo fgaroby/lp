@@ -22,7 +22,7 @@ class Picture extends Model
 
     public function getNameAttribute(): string
     {
-        return sprintf('Movie_%d.%s', $this->id, $this->extensionName());
+        return sprintf('Movie_%d.%s', $this->picture_id, $this->extensionName());
     }
 
     /**
