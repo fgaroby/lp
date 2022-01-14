@@ -29,6 +29,11 @@ class Person extends Model
         'date_naissance' => 'datetime:Y-m-d',
     ];
 
+    public function getPhotoAttribute(): string
+    {
+        return sprintf('Person_%d.%s', $this->person_id, 'jpg');
+    }
+
     public function movies(): BelongsToMany
     {
         return $this->belongsToMany(Movie::class, 'movie_person')
