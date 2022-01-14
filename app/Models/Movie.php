@@ -57,6 +57,6 @@ class Movie extends Model
      */
     public function pictures(): BelongsToMany
     {
-        return $this->belongsToMany(Picture::class, 'picture_movie', 'picture_picture_id', 'movie_movie_id');
+        return $this->belongsToMany(Picture::class, 'picture_movie', 'movie_movie_id', 'picture_picture_id');
     }
 }
