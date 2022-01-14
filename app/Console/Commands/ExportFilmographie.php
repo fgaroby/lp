@@ -117,7 +117,9 @@ class ExportFilmographie extends Command
             ->chunkById(self::MAX_SIZE, function($movies) use(&$batch) { // On limite le nombre de films traités à la fois
                 $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$batch, 'total' => $this->total]);
 
+                // On boucle sur les films
                 foreach ($movies as $movie) {
+                    // On boucle sur les personnes concernées dans chaque film
                     foreach($movie->persons as $person) {
                         // On génère la ressource complète
                         $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -128,6 +130,7 @@ class ExportFilmographie extends Command
                 }
             }, 'movie_id');
 
+        // On met à jour les films, pour ne pas les retraiter la prochaine fois.
         Movie::query()
             ->where('a_mettre_a_jour', true)
             ->update([
