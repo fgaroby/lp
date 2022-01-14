@@ -92,12 +92,15 @@ class ExportFilmographie extends Command
      * The command has finished.
      *
      * @param integer $code
-     * @return void
+     *
+     * @return integer
      */
-    protected function _end($code = 0)
+    protected function _end(int $code = 0)
     {
         $this->log(LogLevel::DEBUG, 'memory_usage', ['memory' => convert_units(memory_get_usage())]);
         $this->log(LogLevel::INFO, 'end', ['command' => $this->signature, 'code' => $code]);
+
+        return $code;
     }
 
     /**
@@ -109,36 +112,39 @@ class ExportFilmographie extends Command
     {
         $this->_start();
 
-        $batch = 0; // On peut compter le nombre de lots traités
-        Movie::query()
-            ->from('movie AS m')
-            ->where('m.a_mettre_a_jour', true) // Seuls les films mis à jour doivent être traités
-            ->with(['persons', 'persons.movies', 'pictures']) // eager-loading (évite le "N+1 query problem")
-            ->chunkById(self::MAX_SIZE, function($movies) use(&$batch) { // On limite le nombre de films traités à la fois
-                $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$batch, 'total' => $this->total]);
+        $batch = 0; // le mode DEBUG compte le nombre de lots traités.
 
-                // On boucle sur les films
-                foreach ($movies as $movie) {
-                    // On boucle sur les personnes concernées dans chaque film
-                    foreach($movie->persons as $person) {
-                        // On génère la ressource complète
-                        $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        return DB::transaction(function () use(&$batch) {
+            Movie::query()
+                ->from('movie AS m')
+                ->where('m.a_mettre_a_jour', true) // Seuls les films mis à jour doivent être traités
+                ->with(['persons', 'persons.movies', 'pictures']) // eager-loading (évite le "N+1 query problem")
+                ->chunkById(self::MAX_SIZE, function($movies) use(&$batch) { // On limite le nombre de films traités à la fois
+                    $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$batch, 'total' => $this->total]);
 
-                        // On sauvegarde les fiches-personnes dans des fichiers JSON.
-                        Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
+                    // On boucle sur les films
+                    foreach ($movies as $movie) {
+                        // On boucle sur les personnes concernées dans chaque film
+                        foreach($movie->persons as $person) {
+                            // On génère la ressource complète
+                            $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+                            // On sauvegarde les fiches-personnes dans des fichiers JSON.
+                            Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
+                        }
                     }
-                }
-            }, 'movie_id');
+                }, 'movie_id');
 
-        // On met à jour les films, pour ne pas les retraiter la prochaine fois.
-        Movie::query()
-            ->where('a_mettre_a_jour', true)
-            ->update([
-                'a_mettre_a_jour' => false,
-            ]);
+            // On met à jour les films, pour ne pas les retraiter la prochaine fois.
+            Movie::query()
+                ->where('a_mettre_a_jour', true)
+                ->update([
+                    'a_mettre_a_jour' => false,
+                ]);
 
-        $this->_end(0);
+            return $this->_end(0);
+        });
 
-        return 0;
+        return $this->_end(1);
     }
 }
