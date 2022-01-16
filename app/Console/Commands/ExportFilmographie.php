@@ -35,6 +35,13 @@ class ExportFilmographie extends Command
     const MAX_SIZE = 20;
 
     /**
+     * Directory where the JSON files will be created.
+     *
+     * @var string
+     */
+    const OUTPUT_DIRECTORY = 'lp';
+
+    /**
      * Error code when everything is OK.
      *
      * @var int
@@ -155,7 +162,7 @@ class ExportFilmographie extends Command
                                 $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
                                 // On sauvegarde les fiches-personnes dans des fichiers JSON.
-                                Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
+                                Storage::disk('public')->put(sprintf('%s/%d.json', self::OUTPUT_DIRECTORY, $person->person_id), $personJson);
 
                                 $this->persons[] = $person->person_id;
                             }
