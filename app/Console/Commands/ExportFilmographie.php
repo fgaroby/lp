@@ -28,14 +28,35 @@ class ExportFilmographie extends Command
     protected $description = 'Exporte la filmographie complète des personnes dont au moins un film a été mis à jour.';
 
     /**
-     * Nombre maximal de films à traiter en un lot, pour limiter l'impact sur la RAM.
+     * Number of movies will be processed, during a batch.
      *
      * @var int
      */
     const MAX_SIZE = 20;
 
     /**
-     * Total movies to process.
+     * Error code when everything is OK.
+     *
+     * @var int
+     */
+    const EXIT_OK = 0;
+
+    /**
+     * Error code when soemthing has failed.
+     *
+     * @var int
+     */
+    const EXIT_FAILED = 1;
+
+    /**
+     * Count the batches which have already been processed.
+     *
+     * @var integer
+     */
+    protected int $batch = 0;
+
+    /**
+     * Total movies batches to process.
      *
      * @var integer
      */
@@ -112,16 +133,12 @@ class ExportFilmographie extends Command
     {
         $this->_start();
 
-        $batch = 0; // le mode DEBUG compte le nombre de lots traités.
-
-        return DB::transaction(function () use(&$batch) {
+        return DB::transaction(function () {
             Movie::query()
                 ->from('movie AS m')
                 ->where('m.a_mettre_a_jour', true) // Seuls les films mis à jour doivent être traités
                 ->with(['persons', 'persons.movies', 'pictures']) // eager-loading (évite le "N+1 query problem")
-                ->chunkById(self::MAX_SIZE, function($movies) use(&$batch) { // On limite le nombre de films traités à la fois
-                    $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$batch, 'total' => $this->total]);
-
+                ->chunkById(self::MAX_SIZE, function($movies) { // On limite le nombre de films traités à la fois
                     // On boucle sur les films
                     foreach ($movies as $movie) {
                         // On boucle sur les personnes concernées dans chaque film
@@ -133,6 +150,8 @@ class ExportFilmographie extends Command
                             Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
                         }
                     }
+
+                    $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$this->batch, 'total' => $this->total]);
                 }, 'movie_id');
 
             // On met à jour les films, pour ne pas les retraiter la prochaine fois.
@@ -142,7 +161,7 @@ class ExportFilmographie extends Command
                     'a_mettre_a_jour' => false,
                 ]);
 
-            return $this->_end(0);
+            return $this->_end(self::EXIT_OK);
         });
 
         return $this->_end(1);

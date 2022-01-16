@@ -4,7 +4,7 @@ return [
     'lp' => [
         'export' => [
             'batch' => [
-                'count' => 'Batch :batch / :total',
+                'count' => 'Batches :batch / :total already processed.',
                 'size' => 'Batch size is :batch',
                 'total' => 'There are :total batches to process.'
             ],
