@@ -63,6 +63,13 @@ class ExportFilmographie extends Command
     protected int $total = 0;
 
     /**
+     * Array of persons who have already been processed.
+     *
+     * @var array
+     */
+    protected $persons = [];
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -143,17 +150,22 @@ class ExportFilmographie extends Command
                     foreach ($movies as $movie) {
                         // On boucle sur les personnes concernées dans chaque film
                         foreach($movie->persons as $person) {
-                            // On génère la ressource complète
-                            $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                            if(!in_array($person->person_id, $this->persons)) { // Si cette personne n'a pas encore été traitée => on génère sa fiche.
+                                // On génère la ressource complète
+                                $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-                            // On sauvegarde les fiches-personnes dans des fichiers JSON.
-                            Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
+                                // On sauvegarde les fiches-personnes dans des fichiers JSON.
+                                Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
+
+                                $this->persons[] = $person->person_id;
+                            }
                         }
                     }
 
                     $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$this->batch, 'total' => $this->total]);
                 }, 'movie_id');
 
+            $this->log(LogLevel::DEBUG, 'batch.persons', ['count' => sizeof($this->persons)]);
             // On met à jour les films, pour ne pas les retraiter la prochaine fois.
             Movie::query()
                 ->where('a_mettre_a_jour', true)
@@ -164,6 +176,6 @@ class ExportFilmographie extends Command
             return $this->_end(self::EXIT_OK);
         });
 
-        return $this->_end(1);
+        return $this->_end(self::EXIT_FAILED);
     }
 }

@@ -5,6 +5,7 @@ return [
         'export' => [
             'batch' => [
                 'count' => 'Batches :batch / :total already processed.',
+                'persons' => ':count persons have been processed.',
                 'size' => 'Batch size is :batch',
                 'total' => 'There are :total batches to process.'
             ],
