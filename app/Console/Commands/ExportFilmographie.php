@@ -130,15 +130,14 @@ class ExportFilmographie extends Command
 
         $this->log(LogLevel::DEBUG, 'batch.size', ['batch' => self::MAX_SIZE]);
 
-        if($this->getOutput()->isdebug())
-        {
-            $this->total = Movie::query()
-                                ->from('movie AS m')
-                                ->select(DB::raw(sprintf('CEIL(COUNT(DISTINCT m.movie_id) / %d) AS total', self::MAX_SIZE)))
-                                ->where('m.a_mettre_a_jour', true)
-                                ->value('total');
-            $this->log(LogLevel::DEBUG, 'batch.total', ['total' => $this->total]);
-        }
+        $countMovies = Movie::query()
+                            ->from('movie AS m')
+                            ->select('m.movie_id')
+                            ->distinct()
+                            ->where('m.a_mettre_a_jour', true)
+                            ->count();
+        $this->total = ceil($countMovies / self::MAX_SIZE);
+        $this->log(LogLevel::DEBUG, 'batch.total', ['total' => $this->total]);
     }
 
     /**
