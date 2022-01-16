@@ -53,7 +53,7 @@ class ExportFilmographie extends Command
      *
      * @var string
      */
-    protected $signature = self::COMMAND_NAME . '{--output= : Define where the JSON should be created}';
+    protected $signature = self::COMMAND_NAME . ' {--output= : Define where the JSON files should be created}';
 
     /**
      * The console command description.
