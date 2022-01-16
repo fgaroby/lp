@@ -14,18 +14,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 class ExportFilmographie extends Command
 {
     /**
-     * The name and signature of the console command.
+     * The command name.
      *
      * @var string
      */
-    protected $signature = 'lp:export';
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Exporte la filmographie complète des personnes dont au moins un film a été mis à jour.';
+    const COMMAND_NAME = 'lp:export';
 
     /**
      * Number of movies will be processed, during a batch.
@@ -33,6 +26,13 @@ class ExportFilmographie extends Command
      * @var int
      */
     const MAX_SIZE = 20;
+
+    /**
+     * Directory where the JSON files will be created.
+     *
+     * @var string
+     */
+    const OUTPUT_DIRECTORY = 'lp';
 
     /**
      * Error code when everything is OK.
@@ -47,6 +47,27 @@ class ExportFilmographie extends Command
      * @var int
      */
     const EXIT_FAILED = 1;
+
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = self::COMMAND_NAME . '{--output= : Define where the JSON should be created}';
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'Exporte la filmographie complète des personnes dont au moins un film a été mis à jour.';
+
+    /**
+     * Define where the JSON files should be created.
+     *
+     * @var string
+     */
+    protected $output_dir = null;
 
     /**
      * Count the batches which have already been processed.
@@ -102,7 +123,11 @@ class ExportFilmographie extends Command
      */
     protected function _start()
     {
-        $this->log(LogLevel::INFO, 'start', ['command' => $this->signature]);
+        $this->log(LogLevel::INFO, 'start', ['command' => self::COMMAND_NAME]);
+
+        $this->output_dir = $this->option('output')?? self::OUTPUT_DIRECTORY;
+        $this->log(LogLevel::DEBUG, 'batch.output', ['output' => public_path($this->output_dir)]);
+
         $this->log(LogLevel::DEBUG, 'batch.size', ['batch' => self::MAX_SIZE]);
 
         if($this->getOutput()->isdebug())
@@ -126,7 +151,7 @@ class ExportFilmographie extends Command
     protected function _end(int $code = 0)
     {
         $this->log(LogLevel::DEBUG, 'memory_usage', ['memory' => convert_units(memory_get_usage())]);
-        $this->log(LogLevel::INFO, 'end', ['command' => $this->signature, 'code' => $code]);
+        $this->log(LogLevel::INFO, 'end', ['command' => self::COMMAND_NAME, 'code' => $code]);
 
         return $code;
     }
@@ -155,7 +180,7 @@ class ExportFilmographie extends Command
                                 $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
                                 // On sauvegarde les fiches-personnes dans des fichiers JSON.
-                                Storage::disk('public')->put(sprintf('%d.json', $person->person_id), $personJson);
+                                Storage::disk('public')->put(sprintf('%s/%d.json', $this->output_dir, $person->person_id), $personJson);
 
                                 $this->persons[] = $person->person_id;
                             }
