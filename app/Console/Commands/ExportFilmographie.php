@@ -183,7 +183,8 @@ class ExportFilmographie extends Command
                     // On boucle sur les films
                     foreach ($movies as $movie) {
                         // On boucle sur les personnes concernées dans chaque film
-                        foreach($movie->persons as $person) {
+                        $persons = $movie->persons()->kwm()->get();
+                        foreach($persons as $person) {
                             if(!in_array($person->person_id, $this->persons)) { // Si cette personne n'a pas encore été traitée => on génère sa fiche.
                                 // On génère la ressource complète
                                 $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

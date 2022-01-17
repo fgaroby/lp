@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -38,5 +39,16 @@ class Person extends Model
     {
         return $this->belongsToMany(Movie::class, 'movie_person')
                     ->orderBy('movie_id');
+    }
+
+    /**
+     * Scope a query to only the persons with a 'id_kwm_lp'
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeKwm(Builder $query)
+    {
+        return $query->whereNotNull('person.id_kwm_lp');
     }
 }

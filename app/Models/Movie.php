@@ -58,8 +58,7 @@ class Movie extends Model
      */
     public function persons(): BelongsToMany
     {
-        return $this->belongsToMany(Person::class, 'movie_person')
-                    ->whereNotNull('person.id_kwm_lp');
+        return $this->belongsToMany(Person::class, 'movie_person');
     }
 
     /**
