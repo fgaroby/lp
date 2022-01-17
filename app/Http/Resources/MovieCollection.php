@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Person;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class MovieCollection extends ResourceCollection
@@ -24,7 +23,7 @@ class MovieCollection extends ResourceCollection
      */
     public function toArray($request)
     {
-        return $this->collection->map(function(MovieResource $resource) use($request){
+        return $this->collection->map(function (MovieResource $resource) use ($request) {
             return $resource->person($this->person_id)->toArray($request);
         })->all();
     }

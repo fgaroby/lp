@@ -153,9 +153,9 @@ class ExportFilmographie extends Command
     /**
      * The command has finished.
      *
-     * @param integer $code
+     * @param int $code
      *
-     * @return integer
+     * @return int
      */
     protected function _end(int $code = 0)
     {
@@ -179,13 +179,13 @@ class ExportFilmographie extends Command
                 ->from('movie AS m')
                 ->where('m.a_mettre_a_jour', true) // Seuls les films mis à jour doivent être traités
                 ->with(['persons', 'persons.movies', 'pictures']) // eager-loading (évite le "N+1 query problem")
-                ->chunkById($this->batch_size, function($movies) { // On limite le nombre de films traités à la fois
+                ->chunkById($this->batch_size, function ($movies) { // On limite le nombre de films traités à la fois
                     // On boucle sur les films
                     foreach ($movies as $movie) {
                         // On boucle sur les personnes concernées dans chaque film
                         $persons = $movie->persons()->kwm()->get();
-                        foreach($persons as $person) {
-                            if(!in_array($person->person_id, $this->persons)) { // Si cette personne n'a pas encore été traitée => on génère sa fiche.
+                        foreach ($persons as $person) {
+                            if (!in_array($person->person_id, $this->persons)) { // Si cette personne n'a pas encore été traitée => on génère sa fiche.
                                 // On génère la ressource complète
                                 $personJson = (new PersonResource($person))->toJson(JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
@@ -200,7 +200,7 @@ class ExportFilmographie extends Command
                     $this->log(LogLevel::DEBUG, 'batch.count', ['batch' => ++$this->batch, 'total' => $this->total]);
                 }, 'movie_id');
 
-            $this->log(LogLevel::DEBUG, 'batch.persons', ['count' => sizeof($this->persons)]);
+            $this->log(LogLevel::DEBUG, 'batch.persons', ['count' => count($this->persons)]);
             // On met à jour les films, pour ne pas les retraiter la prochaine fois.
             Movie::query()
                 ->where('a_mettre_a_jour', true)

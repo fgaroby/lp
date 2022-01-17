@@ -42,7 +42,7 @@ class Person extends Model
     }
 
     /**
-     * Scope a query to only the persons with a 'id_kwm_lp'
+     * Scope a query to only the persons with a 'id_kwm_lp'.
      *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @return \Illuminate\Database\Eloquent\Builder

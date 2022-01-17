@@ -5,11 +5,11 @@
  *
  * @return string
  */
-if(! function_exists('convert_units')) {
+if (!function_exists('convert_units')) {
     function convert_units(int $size): string
     {
-        $unit = array('o','ko','Mo','Go','To','Po');
+        $unit = ['o', 'ko', 'Mo', 'Go', 'To', 'Po'];
 
-        return @round($size / pow(1024, ($i = floor( log( $size, 1024)))), 2) . ' ' . $unit[$i];
+        return @round($size / pow(1024, ($i = floor(log($size, 1024)))), 2) . ' ' . $unit[$i];
     }
 }
