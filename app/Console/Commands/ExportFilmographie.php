@@ -25,7 +25,7 @@ class ExportFilmographie extends Command
      *
      * @var int
      */
-    const MAX_SIZE = 20;
+    const BATCH_SIZE = 20;
 
     /**
      * Directory where the JSON files will be created.
@@ -53,7 +53,9 @@ class ExportFilmographie extends Command
      *
      * @var string
      */
-    protected $signature = self::COMMAND_NAME . ' {--output= : Define where the JSON files should be created}';
+    protected $signature = self::COMMAND_NAME
+                            . ' {--output= : Define where the JSON files should be created}
+                                {--batch= : Define the size of a batch}';
 
     /**
      * The console command description.
@@ -70,16 +72,23 @@ class ExportFilmographie extends Command
     protected $output_dir = null;
 
     /**
+     * Define the size of a batch.
+     *
+     * @var int
+     */
+    protected $batch_size = 0;
+
+    /**
      * Count the batches which have already been processed.
      *
-     * @var integer
+     * @var int
      */
     protected int $batch = 0;
 
     /**
      * Total movies batches to process.
      *
-     * @var integer
+     * @var int
      */
     protected int $total = 0;
 
@@ -125,10 +134,11 @@ class ExportFilmographie extends Command
     {
         $this->log(LogLevel::INFO, 'start', ['command' => self::COMMAND_NAME]);
 
-        $this->output_dir = $this->option('output')?? self::OUTPUT_DIRECTORY;
+        $this->output_dir = $this->option('output') ?? self::OUTPUT_DIRECTORY;
         $this->log(LogLevel::DEBUG, 'batch.output', ['output' => public_path($this->output_dir)]);
 
-        $this->log(LogLevel::DEBUG, 'batch.size', ['batch' => self::MAX_SIZE]);
+        $this->batch_size = $this->option('batch') ?? self::BATCH_SIZE;
+        $this->log(LogLevel::DEBUG, 'batch.size', ['batch' => $this->batch_size]);
 
         $countMovies = Movie::query()
                             ->from('movie AS m')
@@ -136,7 +146,7 @@ class ExportFilmographie extends Command
                             ->distinct()
                             ->where('m.a_mettre_a_jour', true)
                             ->count();
-        $this->total = ceil($countMovies / self::MAX_SIZE);
+        $this->total = ceil($countMovies / $this->batch_size);
         $this->log(LogLevel::DEBUG, 'batch.total', ['total' => $this->total]);
     }
 
@@ -169,7 +179,7 @@ class ExportFilmographie extends Command
                 ->from('movie AS m')
                 ->where('m.a_mettre_a_jour', true) // Seuls les films mis à jour doivent être traités
                 ->with(['persons', 'persons.movies', 'pictures']) // eager-loading (évite le "N+1 query problem")
-                ->chunkById(self::MAX_SIZE, function($movies) { // On limite le nombre de films traités à la fois
+                ->chunkById($this->batch_size, function($movies) { // On limite le nombre de films traités à la fois
                     // On boucle sur les films
                     foreach ($movies as $movie) {
                         // On boucle sur les personnes concernées dans chaque film
